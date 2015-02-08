@@ -25,13 +25,14 @@ public class DateFormatSpinner extends Spinner {
 
     public final static String[] DEFAULT_TIME_FORMATS = new String[]{"HH:mm", "hh:mm aa"};
     public final static String[] DEFAULT_DATE_FORMATS =
-            new String[]{"MM/dd", "dd.MM.", "EEEE, dd. MMM", "EEEE, dd. MMMM", "EEE, dd. MMMM",
-                    "EEEE, MMM/dd", "EEEE, MMMM/dd", "EEE, MMMM/dd", "dd.MM.yyyy", "dd. MMMM yyyy",
+            new String[]{"MM/dd", "dd.MM.", "EEEE, d. MMM", "EEEE, d. MMMM", "EEE, d. MMMM",
+                    "EEEE, MMM/dd", "EEEE, MMMM/dd", "EEE, MMMM/dd", "dd.MM.yyyy", "d. MMMM yyyy",
                     "MM/dd/yy"};
 
     private final String[] formats;
     private final Context c;
     private String custom;
+    private OnItemSelectedListener oisl;
 
     private boolean programmaticallySet = false;
 
@@ -70,65 +71,71 @@ public class DateFormatSpinner extends Spinner {
         init();
     }
 
+    private void showCustomDialog() {
+        final Dialog d = new Dialog(c);
+        d.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        d.setContentView(R.layout.custom_dialog);
+        d.findViewById(R.id.explain).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                c.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(
+                        "http://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html"))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            }
+        });
+        final TextView preview = (TextView) d.findViewById(R.id.preview);
+        final EditText text = (EditText) d.findViewById(R.id.text);
+        text.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(final CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(final CharSequence s, int start, int before, int count) {
+                try {
+                    preview.setText(new SimpleDateFormat(s.toString()).format(new Date()));
+                } catch (Exception e) {
+                    preview.setText("ERROR - Invalid format");
+                }
+            }
+
+            @Override
+            public void afterTextChanged(final Editable editable) {
+            }
+        });
+        text.setText(custom);
+        d.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                try {
+                    new SimpleDateFormat(text.getText().toString()).format(new Date());
+                    custom = text.getText().toString();
+                    c.getSharedPreferences("DateFormatSettings", Context.MODE_PRIVATE).edit()
+                            .putString("custom_" + getId(), custom).commit();
+                    if (oisl != null) oisl.onItemSelected(null, null, formats.length, 0);
+                } catch (Exception e) {
+                }
+                d.dismiss();
+            }
+        });
+        d.show();
+    }
+
     private void init() {
         custom = c.getSharedPreferences("DateFormatSettings", Context.MODE_PRIVATE)
                 .getString("custom_" + getId(), formats[0]);
         setAdapter();
-        setOnItemSelectedListener(new OnItemSelectedListener() {
+        super.setOnItemSelectedListener(new OnItemSelectedListener() {
             @Override
-            public void onItemSelected(final AdapterView<?> adapterView, final View view, int position, long id) {
+            public void onItemSelected(final AdapterView<?> adapterView, final View view, final int position, final long id) {
                 if (programmaticallySet) {
                     programmaticallySet = false;
                     return;
                 }
                 if (position == formats.length) {
-                    final Dialog d = new Dialog(c);
-                    d.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                    d.setContentView(R.layout.custom_dialog);
-                    d.findViewById(R.id.explain).setOnClickListener(new OnClickListener() {
-                        @Override
-                        public void onClick(final View v) {
-                            c.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(
-                                    "http://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html"))
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-                        }
-                    });
-                    final TextView preview = (TextView) d.findViewById(R.id.preview);
-                    final EditText text = (EditText) d.findViewById(R.id.text);
-                    text.addTextChangedListener(new TextWatcher() {
-                        @Override
-                        public void beforeTextChanged(final CharSequence s, int start, int count, int after) {
-                        }
-
-                        @Override
-                        public void onTextChanged(final CharSequence s, int start, int before, int count) {
-                            try {
-                                preview.setText(
-                                        new SimpleDateFormat(s.toString()).format(new Date()));
-                            } catch (Exception e) {
-                                preview.setText("ERROR - Invalid format");
-                            }
-                        }
-
-                        @Override
-                        public void afterTextChanged(final Editable editable) {
-                        }
-                    });
-                    text.setText(custom);
-                    d.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(final View v) {
-                            try {
-                                new SimpleDateFormat(text.getText().toString()).format(new Date());
-                                custom = text.getText().toString();
-                                c.getSharedPreferences("DateFormatSettings", Context.MODE_PRIVATE)
-                                        .edit().putString("custom_" + getId(), custom).commit();
-                            } catch (Exception e) {
-                            }
-                            d.dismiss();
-                        }
-                    });
-                    d.show();
+                    showCustomDialog();
+                } else if (oisl != null) {
+                    oisl.onItemSelected(adapterView, view, position, id);
                 }
             }
 
@@ -137,6 +144,11 @@ public class DateFormatSpinner extends Spinner {
 
             }
         });
+    }
+
+    @Override
+    public void setOnItemSelectedListener(final OnItemSelectedListener listener) {
+        oisl = listener;
     }
 
     private void setAdapter() {
