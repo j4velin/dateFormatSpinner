@@ -1,0 +1,8 @@
+<resources>
+    <declare-styleable name="DateFormatSpinner">
+        <attr name="defaultFormats" format="enum">
+            <enum name="time" value="0"/>
+            <enum name="date" value="1"/>
+        </attr>
+    </declare-styleable>
+</resources>

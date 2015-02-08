@@ -1,0 +1,3 @@
+<resources>
+    <string name="identifiers">For available identifiers, see <a href="http://developer.android.com/reference/java/text/SimpleDateFormat.html">SimpleDateFormat</a>.\nPreview:</string>
+</resources>
