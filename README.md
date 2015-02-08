@@ -14,6 +14,7 @@ Usage
 Add a spinner for date formats
 ```xml
         <de.j4velin.dateFormatSpinner.DateFormatSpinner
+        xmlns:spinner="http://schemas.android.com/apk/res-auto"
             android:id="@+id/date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -22,6 +23,7 @@ Add a spinner for date formats
 or for time formats
 ```xml
         <de.j4velin.dateFormatSpinner.DateFormatSpinner
+        xmlns:spinner="http://schemas.android.com/apk/res-auto"
             android:id="@+id/time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
