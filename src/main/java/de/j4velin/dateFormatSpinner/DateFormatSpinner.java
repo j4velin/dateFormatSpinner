@@ -33,6 +33,7 @@ public class DateFormatSpinner extends Spinner {
     private final Context c;
     private String custom;
     private OnItemSelectedListener oisl;
+    private int lastPosition = -1;
 
     private boolean programmaticallySet = false;
 
@@ -128,15 +129,15 @@ public class DateFormatSpinner extends Spinner {
         super.setOnItemSelectedListener(new OnItemSelectedListener() {
             @Override
             public void onItemSelected(final AdapterView<?> adapterView, final View view, final int position, final long id) {
+                if (lastPosition == position) return;
                 if (programmaticallySet) {
                     programmaticallySet = false;
-                    return;
-                }
-                if (position == formats.length) {
+                } else if (position == formats.length) {
                     showCustomDialog();
                 } else if (oisl != null) {
                     oisl.onItemSelected(adapterView, view, position, id);
                 }
+                lastPosition = position;
             }
 
             @Override
@@ -164,13 +165,14 @@ public class DateFormatSpinner extends Spinner {
     }
 
     public void setValue(final String v) {
+        programmaticallySet = true; // don't show dialog
         for (int i = 0; i < formats.length; i++) {
             if (formats[i].equals(v)) {
                 setSelection(i);
                 return;
             }
         }
-        programmaticallySet = true; // don't show dialog
+        // no match yet? -> "custom" selected
         custom = v;
         c.getSharedPreferences("DateFormatSettings", Context.MODE_PRIVATE).edit()
                 .putString("custom_" + getId(), custom).commit();
