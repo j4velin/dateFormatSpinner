@@ -20,7 +20,5 @@ android {
             minifyEnabled false
         }
     }
-    lintOptions {
-        disable 'MissingTranslation'
-    }
+    namespace 'de.j4velin.dateFormatSpinner'
 }
